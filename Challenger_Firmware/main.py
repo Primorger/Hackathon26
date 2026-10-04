@@ -5,11 +5,6 @@ import framebuf
 import math
 import _thread
 
-# ==========================================
-# WEB DASHBOARD CONFIG (ESP32-C3 via ESP-AT)
-# ==========================================
-# UART to the onboard ESP32-C3. The older Challenger RP2040 WiFi used UART1 on GP4/GP5;
-# CHECK the MkII pinout diagram and change these if they differ.
 UART_ID, TX_PIN, RX_PIN, BAUD = 1, 4, 5, 115200
 DEBUG = True   # print ESP32-C3 traffic + send results to the REPL (set False when it works)
 AP_SSID, AP_PASS = "CloudTracker", "energy2026"   # password must be 8+ chars
@@ -38,23 +33,10 @@ PANEL_HEIGHT_M = 0.055
 arrow_n  = bytearray([0x01, 0x80, 0x03, 0xC0, 0x07, 0xE0, 0x0F, 0xF0, 0x1F, 0xF8, 0x3F, 0xFC, 0x7F, 0xFE, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0])
 arrow_s  = bytearray([0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x03, 0xC0, 0x7F, 0xFE, 0x3F, 0xFC, 0x1F, 0xF8, 0x0F, 0xF0, 0x07, 0xE0, 0x03, 0xC0, 0x01, 0x80])
 arrow_e  = bytearray([0x00, 0x00, 0x00, 0x40, 0x00, 0x60, 0x00, 0x70, 0x00, 0x78, 0x00, 0x7C, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0x00, 0x7C, 0x00, 0x78, 0x00, 0x70, 0x00, 0x60, 0x00, 0x40, 0x00, 0x00])
-arrow_w  = bytearray([0x00, 0x00, 0x02, 0x00, 0x06, 0x00, 0x0E, .1'
-b'0x00, 0x1E, 0x00, 0x3E, 0x00, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0xFF, 0x3E, 0x00, 0x1E, 0x00, 0x0E, 0x00, 0x06, 0x00, 0x02, 0x00, 0x00, 0x00])
-arrow_ne = bytearray([0x00, 0xFF, 0x00, 0x7F, 0x00, 0x3F, 0x00, 0x1F, 0x00, 0x3F, 0x00, 0x77, 0x00, 0xE3, 0x01, 0ESP>x Cb1',
- 
-0OxK0
-3
-,
- 
-0>x'8
-0, 0x07, 0x00, 0x0E, 0x00, 0x1C, 0x00, 0x38, 0x00, 0x70, 0x00, 0xE0, 0x00, 0xC0, 0x00])
+arrow_w  = bytearray([0x00, 0x00, 0x02, 0x00, 0x06, 0x00, 0x0E, 0x00, 0x1E, 0x00, 0x3E, 0x00, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x7F, 0xFF, 0x3E, 0x00, 0x1E, 0x00, 0x0E, 0x00, 0x06, 0x00, 0x02, 0x00, 0x00, 0x00])
+arrow_ne = bytearray([0x00, 0xFF, 0x00, 0x7F, 0x00, 0x3F, 0x00, 0x1F, 0x00, 0x3F, 0x00, 0x77, 0x00, 0xE3, 0x01, 0xC1, 0x03, 0x80, 0x07, 0x00, 0x0E, 0x00, 0x1C, 0x00, 0x38, 0x00, 0x70, 0x00, 0xE0, 0x00, 0xC0, 0x00])
 arrow_nw = bytearray([0xFF, 0x00, 0xFE, 0x00, 0xFC, 0x00, 0xF8, 0x00, 0xFC, 0x00, 0xEE, 0x00, 0xC7, 0x00, 0x83, 0x80, 0x01, 0xC0, 0x00, 0xE0, 0x00, 0x70, 0x00, 0x38, 0x00, 0x1C, 0x00, 0x0E, 0x00, 0x07, 0x00, 0x03])
-arrow_se = bytearray([0xC0, 0x00, 0xE0, 0x00, 0x70, 0x00, 0x38, 0x00, ESP>0 xb1'C
-,
- R0exc0v0 ,2 506x 0bEy,t e0sx
-0
-0',
- 0x07, 0x00, 0x03, 0x80, 0x01, 0xC1, 0x00, 0xE3, 0x00, 0x77, 0x00, 0x3F, 0x00, 0x1F, 0x00, 0x3F, 0x00, 0x7F, 0x00, 0xFF])
+arrow_se = bytearray([0xC0, 0x00, 0xE0, 0x00, 0x70, 0x00, 0x38, 0x00, 0x1C, 0x00, 0x0E, 0x00, 0x07, 0x00, 0x03, 0x80, 0x01, 0xC1, 0x00, 0xE3, 0x00, 0x77, 0x00, 0x3F, 0x00, 0x1F, 0x00, 0x3F, 0x00, 0x7F, 0x00, 0xFF])
 arrow_sw = bytearray([0x00, 0x03, 0x00, 0x07, 0x00, 0x0E, 0x00, 0x1C, 0x00, 0x38, 0x00, 0x70, 0x00, 0xE0, 0x01, 0xC0, 0x83, 0x80, 0xC7, 0x00, 0xEE, 0x00, 0xFC, 0x00, 0xF8, 0x00, 0xFC, 0x00, 0xFE, 0x00, 0xFF, 0x00])
 stable_i = bytearray([0x00, 0x00, 0x3F, 0xFC, 0x3F, 0xFC, 0x30, 0x0C, 0x30, 0x0C, 0x30, 0x0C, 0x30, 0x0C, 0x30, 0x0C, 0x30, 0x0C, 0x30, 0x0C, 0x30, 0x0C, 0x30, 0x0C, 0x3F, 0xFC, 0x3F, 0xFC, 0x00, 0x00, 0x00, 0x00])
 
@@ -85,12 +67,6 @@ max_graph_points = 58
 
 cloud_active = False       
 last_valid_direction = "STABLE" 
-
-Recv 75 bytes
-
-SEND OK
-'
-b'
 held_entry_speed = 0.00
 trailing_lock_active = False    
 lock_timer = 0                  
@@ -101,16 +77,6 @@ previous_loop_voltages = {label: 0.0 for label in adc_pins}
 active_vector = "STABLE"
 calculated_speed = 0.00
 
-# =====================ESP>= =b='=0=,=C=L=O=S=E=D=
-=
-=
-=
-=E=R=R=O=R=
-
-
-'#
- SHARED STATE (core 0 writes, web server on core 1 reads)
-# ==========================================
 state = {"v": [0.0] * 4, "b": [0.0] * 4, "vec": "STABLE", "spd": 0.0,
          "cloud": 0, "lock": 0, "hist": [], "ev": [], "recal": 0}
 
@@ -120,9 +86,6 @@ def log(msg):
     if len(state["ev"]) > 6:
         state["ev"].pop(0)
 
-# ==========================================
-# ESP32-C3 (ESP-AT) WEB SERVER  - runs on core 1
-# ==========================================
 uart = UART(UART_ID, baudrate=BAUD, tx=Pin(TX_PIN), rx=Pin(RX_PIN), rxbuf=4096, txbuf=2048)
 rx = b""
 
@@ -156,11 +119,10 @@ def at(cmd, expect=b"OK", timeout=2000):
         print("AT fail:", cmd)
     return ok
 
-ESP_RST_PIN = 19     # GPIO19 -> ESP32-C3 reset (active low), per the MkII datasheet
-BAUDS = (115200, 1000000, 921600, 460800, 230400, 57600, 9600)   # tried in order
+ESP_RST_PIN = 19
+BAUDS = (115200, 1000000, 921600, 460800, 230400, 57600, 9600)
 
 def esp_reset():
-    """Hardware-reset the ESP32-C3 so it boots into ESP-AT cleanly."""
     global rx
     r = Pin(ESP_RST_PIN, Pin.OUT, value=0)
     time.sleep_ms(100)
@@ -170,7 +132,6 @@ def esp_reset():
     rx = b""
 
 def esp_probe():
-    """Find the baud rate the ESP-AT firmware answers on."""
     global rx
     for b in BAUDS:
         uart.init(baudrate=b, tx=Pin(TX_PIN), rx=Pin(RX_PIN), rxbuf=4096, txbuf=2048)
@@ -196,10 +157,8 @@ def esp_start():
     print("Dashboard up -> http://192.168.4.1")
     return True
 
-TX_CHUNK = 256   # bytes per AT+CIPSEND (small chunks are the most reliable on this UART link)
-
+TX_CHUNK = 256
 def write_all(data):
-    """uart.write() can return short; keep writing until every byte is queued."""
     if isinstance(data, str):
         data = data.encode()
     mv = memoryview(data)
@@ -287,11 +246,7 @@ def poll_http():
             return
         try:
             head = rx[i + 5:j].split(b",")
-            lin'
-OK
-
->'
-b'k, n = int(head[0]), int(head[1])
+            link, n = int(head[0]), int(head[1])
         except Exception:
             rx = rx[:i] + rx[j + 1:]
             continue
@@ -313,14 +268,7 @@ def web_main():
 PAGE = b"""<!doctype html><meta charset=utf-8>
 <meta name=viewport content="width=device-width,initial-scale=1"><title>Cloud Tracker</title>
 <style>
-:root{--bg:#0b1ESP>2 2b0';
--
--OcKd
-:
-#
-1
-3>1'c
-2e;--fg:#e6edf7;--mu:#7d8aa3;--ok:#2dd4bf;--wa:#f59e0b;--bd:#f43f5e}
+:root{--bg:#0b1220;--cd:#131c2e;--fg:#e6edf7;--mu:#7d8aa3;--ok:#2dd4bf;--wa:#f59e0b;--bd:#f43f5e}
 *{box-sizing:border-box}
 body{margin:0 auto;max-width:760px;padding:14px;background:var(--bg);color:var(--fg);font:15px system-ui,sans-serif}
 h1{font-size:18px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
@@ -330,29 +278,17 @@ h1{font-size:18px;margin:0 0 12px;display:flex;align-items:center;gap:8px}
 .r{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .v{font-size:30px;font-weight:700}.v i{font-size:14px;color:var(--mu);font-style:normal;font-weight:400}
 #st{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:700;font-size:14px;background:#1e2a44}
-#cmp{display:flex;align-items:P> b'
-SEND OK
-'
-b'center;gap:16px}
+#cmp{display:flex;align-items:center;gap:16px}
 #arr{width:84px;height:84px;fill:var(--ok);transition:transform .4s}#arr.off{fill:var(--mu);opacity:.5}
 .p{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .pn{background:#0f1729;border-radius:10px;padding:10px}
 .pn b{font-size:20px}.pn span{font-size:12px;color:var(--mu);display:block}
 .bar{height:6px;background:#1e2a44;border-radius:4px;margin-top:6px;overflow:hidden}.bar div{height:100%;background:var(--ok);transition:width .3s}
 canvas{width:100%;height:110px;display:block}
-#evP> b'
-Recv 75 bytes
-
-SEND OK
-'
-b' div{font:12px ui-monospace,monospace;color:var(--mu);padding:2px 0}
+#ev div{font:12px ui-monospace,monospace;color:var(--mu);padding:2px 0}
 button{width:100%;padding:12px;border:0;border-radius:10px;background:#1e2a44;color:var(--fg);font:600 14px system-ui}
 </style>
-<h1><span id=dot></span>Cloud Tracker<span id=up>0s</spaP> b'0,CLOSED
-
-ERROR
-'
-b'n></h1>
+<h1><span id=dot></span>Cloud Tracker<span id=up>0s</span></h1>
 <div class=c><div id=cmp>
 <svg id=arr class=off viewBox="0 0 24 24"><path d="M12 2l8 9h-5v11H9V11H4z"/></svg>
 <div><small>Cloud shadow</small><div class=v><span id=sp>0.00</span> <i>m/s</i></div>
@@ -421,7 +357,6 @@ def calibrate():
     time.sleep(1.0)
     log("Calibrated")
 
-# Start the web server on the second core so OLED/sensing never stall on WiFi traffic
 _thread.start_new_thread(web_main, ())
 
 calibrate()
@@ -566,44 +501,18 @@ while True:
                         raw_vector = "NE"
 
             if raw_vector != "STABLE":
-              ESP>   bif' 0l,aCsOtN_NvEaClTi
-d
-_
-d
-i+rIePcDt,i0o,n3 2=0=: G"ESTT A/BaLpEi" :H
-T
-T P / 1 . 1 
- 
- H o s t :   1 9 2 . 16 8 .4l.a1s
-t
-_Cvoanlniedc_tdii'r
-ection = raw_vector
+                if last_valid_direction == "STABLE":
+                    last_valid_direction = raw_vector
                 active_vector = raw_vector
                 calculated_speed = loop_speed
                 held_entry_speed = loop_speed
-            elif cloud_activESP>e :b
-'
-
- 
- O K 
- 
- 
- 
- > ' 
-      active_vector = last_valid_direction
+            elif cloud_active:
+                active_vector = last_valid_direction
                 calculated_speed = held_entry_speed
             else:
                 active_vector = "STABLE"
-                calculatESP>e db_'s
-p
-eReedc v=  205.60 0b
-y
-t
-e
-s 
- 
- ' 
-        # ---- publish to the web dashboard ----
+                calculated_speed = 0.00
+
             state["v"] = [v_tl, v_tr, v_bl, v_br]
             state["b"] = [baselines["TL (A0)"], baselines["TR (A1)"], baselines["BL (A2)"], baselines["BR (A3)"]]
             state["vec"] = active_vector
@@ -614,4 +523,4 @@ s
             if len(state["hist"]) > HIST_LEN:
                 state["hist"].pop(0)
 
-    time.sleep_ms(5)
+    time.sleep_ms(5) 
