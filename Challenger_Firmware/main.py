@@ -5,16 +5,11 @@ import framebuf
 import math
 import _thread
 
-# ==========================================
-# WEB DASHBOARD CONFIG (ESP32-C3 via ESP-AT)
-# ==========================================
-# UART to the onboard ESP32-C3. The older Challenger RP2040 WiFi used UART1 on GP4/GP5;
-# CHECK the MkII pinout diagram and change these if they differ.
 UART_ID, TX_PIN, RX_PIN, BAUD = 1, 4, 5, 115200
 DEBUG = True   # print ESP32-C3 traffic + send results to the REPL (set False when it works)
-AP_SSID, AP_PASS = "CloudTracker", "energy2026"   # password must be 8+ chars
+AP_SSID, AP_PASS = "SolarityNet", "SolarityNet"   # password must be 8+ chars
 CONTROL_PIN = "1234"                              # needed for the Recalibrate button
-PRINT_SENSORS = False                             # True = your 250 ms voltage printout in the REPL
+PRINT_SENSORS = False                             # True = 250 ms voltage printout in the REPL
 HIST_LEN = 120                                    # chart points (one per 250 ms = 30 s)
 
 adc_pins = {
@@ -82,9 +77,6 @@ previous_loop_voltages = {label: 0.0 for label in adc_pins}
 active_vector = "STABLE"
 calculated_speed = 0.00
 
-# ==========================================
-# SHARED STATE (core 0 writes, web server on core 1 reads)
-# ==========================================
 state = {"v": [0.0] * 4, "b": [0.0] * 4, "vec": "STABLE", "spd": 0.0,
          "cloud": 0, "lock": 0, "hist": [], "ev": [], "recal": 0}
 
@@ -94,9 +86,6 @@ def log(msg):
     if len(state["ev"]) > 6:
         state["ev"].pop(0)
 
-# ==========================================
-# ESP32-C3 (ESP-AT) WEB SERVER  - runs on core 1
-# ==========================================
 uart = UART(UART_ID, baudrate=BAUD, tx=Pin(TX_PIN), rx=Pin(RX_PIN), rxbuf=4096, txbuf=2048)
 rx = b""
 
@@ -130,11 +119,10 @@ def at(cmd, expect=b"OK", timeout=2000):
         print("AT fail:", cmd)
     return ok
 
-ESP_RST_PIN = 19     # GPIO19 -> ESP32-C3 reset (active low), per the MkII datasheet
-BAUDS = (115200, 1000000, 921600, 460800, 230400, 57600, 9600)   # tried in order
+ESP_RST_PIN = 19
+BAUDS = (115200, 1000000, 921600, 460800, 230400, 57600, 9600)
 
 def esp_reset():
-    """Hardware-reset the ESP32-C3 so it boots into ESP-AT cleanly."""
     global rx
     r = Pin(ESP_RST_PIN, Pin.OUT, value=0)
     time.sleep_ms(100)
@@ -144,7 +132,6 @@ def esp_reset():
     rx = b""
 
 def esp_probe():
-    """Find the baud rate the ESP-AT firmware answers on."""
     global rx
     for b in BAUDS:
         uart.init(baudrate=b, tx=Pin(TX_PIN), rx=Pin(RX_PIN), rxbuf=4096, txbuf=2048)
@@ -170,10 +157,9 @@ def esp_start():
     print("Dashboard up -> http://192.168.4.1")
     return True
 
-TX_CHUNK = 256   # bytes per AT+CIPSEND (small chunks are the most reliable on this UART link)
+TX_CHUNK = 256
 
 def write_all(data):
-    """uart.write() can return short; keep writing until every byte is queued."""
     if isinstance(data, str):
         data = data.encode()
     mv = memoryview(data)
@@ -372,7 +358,6 @@ def calibrate():
     time.sleep(1.0)
     log("Calibrated")
 
-# Start the web server on the second core so OLED/sensing never stall on WiFi traffic
 _thread.start_new_thread(web_main, ())
 
 calibrate()
